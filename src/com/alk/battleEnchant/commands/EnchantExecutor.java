@@ -9,13 +9,14 @@ import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.Server;
 import org.bukkit.command.Command;
+import org.bukkit.command.CommandExecutor;
+import org.bukkit.command.CommandSender;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
 
 import com.alk.battleEnchant.BattleEnchant;
-import com.alk.battleEnchant.PermissionController;
 import com.alk.battleEnchant.Util;
 import com.alk.battleEnchant.util.InventoryUtil;
 
@@ -24,17 +25,24 @@ import com.alk.battleEnchant.util.InventoryUtil;
  * @author alkarin
  *
  */
-public class EnchantExecutor  {
+public class EnchantExecutor implements CommandExecutor {
 	
+	public boolean onCommand(CommandSender sender, Command cmd, String commandLabel, String[] args) {
+		final String commandStr = cmd.getName().toLowerCase();
+		int length = args.length;
+
+		if (commandStr.equalsIgnoreCase("enc")){
+			if (length > 0 && args[0].equalsIgnoreCase("list")){
+				return enchantList(sender,args);
+			}
+			return enchantItem(sender,args);
+		}	
+		return true;
+	}
+
 	public boolean handleCommand(Player p, Command cmd, String commandLabel, String[] args) {
 		String commandStr = cmd.getName().toLowerCase();
 		int length = args.length;
-		for (String arg: args){
-			if (!arg.matches("[a-zA-Z0-9_/:,]*")) {
-				sendMessage(p, "arguments can be only alphanumeric with underscores");
-				return true;
-			}
-		}
 
 		if (commandStr.equalsIgnoreCase("enc")){
 			if (length > 0 && args[0].equalsIgnoreCase("list")){
@@ -47,67 +55,72 @@ public class EnchantExecutor  {
 	}	
 
 
-	private boolean enchantItem(Player p, String[] args) {
-		if (p !=null && !PermissionController.hasPermission(p, "enchant.admin")){
-			return sendMessage(p,"&4You don't have permission for this command");
+	private boolean enchantItem(CommandSender cs, String[] args) {
+		if (!cs.isOp() && !cs.hasPermission("enchant.admin")){
+			return sendMessage(cs,"&4You don't have permission for this command");
 		}
+		Player p = null;
+		if (cs instanceof Player)
+			p = (Player) cs;
+
 		if (args.length < 1){
-			sendMessage(p,"&e/e all: give all enchantments to the item you are holding ");
-			sendMessage(p,"&e/e <enchantment1>[:level] <enchantment2>[:level] ... ");
-			sendMessage(p,"&e/e <itemid> <enchantment1>[:level] <enchantment2>[:level] ... ");
-			sendMessage(p,"&e/e <player> <itemid> <enchantment1>[:level] <enchantment2>[:level] ... ");
-			sendMessage(p,"&e/e list: &fshow which enchantments can be put on the item you're holding");
-			sendMessage(p,"&e/e list all: &fshow all enchantments");
-			sendMessage(p,"&e/e list <item>: &f show a list of enchantments you can put on this item");
-			return sendMessage(p,"&eExample: /e all");
+			sendMessage(cs,"&e/e all: give all enchantments to the item you are holding ");
+			sendMessage(cs,"&e/e <enchantment1>[:level] <enchantment2>[:level] ... ");
+			sendMessage(cs,"&e/e <itemid> <enchantment1>[:level] <enchantment2>[:level] ... ");
+			sendMessage(cs,"&e/e <player> <itemid> <enchantment1>[:level] <enchantment2>[:level] ... ");
+			sendMessage(cs,"&e/e list: &fshow which enchantments can be put on the item you're holding");
+			sendMessage(cs,"&e/e list all: &fshow all enchantments");
+			sendMessage(cs,"&e/e list <item>: &f show a list of enchantments you can put on this item");
+			return sendMessage(cs,"&eExample: /e all");
 		}
 		/// Have they specified an item to enchant
 		ItemStack is = InventoryUtil.getItemStack(args[0]);
-		if (is != null && is.getTypeId() > 256){
+		if (is != null && is.getTypeId() > 256 && p != null){
 			is = giveEnchantedItem(p,is,minus1Arg(args));
 			String iname = InventoryUtil.getCommonName(is);
 			if (is.getEnchantments() == null || is.getEnchantments().isEmpty()){
-				return sendMessage(p,"&eYou have been given a " + iname);}
-			return sendMessage(p,"&eYou now have an enchanted " + iname + " with " + getEnchantmentNames(is));
+				return sendMessage(cs,"&eYou have been given a " + iname);}
+			return sendMessage(cs,"&eYou now have an enchanted " + iname + " with " + getEnchantmentNames(is));
 		}
 
 		EnchantmentWithLevel ewl = getEnchantment(args[0]);
-		if (ewl != null){
+		if (ewl != null && p != null){
 			return enchantItemInHand(p,args);
 		}
 
 		Player pl = findPlayer(args[0]);
 		if (pl == null){
-			sendMessage(p, "&e" + args[0] +" was not found");
-			return sendMessage(p,"&e/e list: &fshow which enchantments can be put on the item you're holding");
+			sendMessage(cs, "&e" + args[0] +" was not found");
+			return sendMessage(cs,"&e/e list: &fshow which enchantments can be put on the item you're holding");
 		}
 		if (args.length < 2){
-			return sendMessage(p,"&e/e <player> <itemid> <enchantment1>[:level] <enchantment2>[:level] ... ");			
+			return sendMessage(cs,"&e/e <player> <itemid> <enchantment1>[:level] <enchantment2>[:level] ... ");			
 		}
 		is = InventoryUtil.getItemStack(args[1]);
 		if (is == null){
-			return sendMessage(p,"&eItem " + args[1] + " not found");
+			return sendMessage(cs,"&eItem " + args[1] + " not found");
 		}
 		is = giveEnchantedItem(pl,is,minus1Arg(args));
 		if (is == null){
-			return sendMessage(p,"&eCouldn't enchant item");}
+			return sendMessage(cs,"&eCouldn't enchant item");}
 		String name = pl.getName();
 		String iname = Material.getMaterial(is.getTypeId()).toString();
 		if (is.getEnchantments() == null || is.getEnchantments().isEmpty()){
 			sendMessage(pl,"&eYou have been given a " + iname);
-			return sendMessage(p,"&eYou sent " + name + " a " + iname);
+			return sendMessage(cs,"&eYou sent " + name + " a " + iname);
 		}
 		sendMessage(pl,"&eYou have been given an enchanted " + iname + " with " + getEnchantmentNames(is));
-		return sendMessage(p,"&eYou sent " + name + " an enchanted " + iname + " with " + getEnchantmentNames(is));
+		return sendMessage(cs,"&eYou sent " + name + " an enchanted " + iname + " with " + getEnchantmentNames(is));
 	}
 
-	private boolean enchantList(Player p, String[] args) {
+	private boolean enchantList(CommandSender p, String[] args) {
 		int length = args.length;
 		boolean all = length > 1 && args[1].equalsIgnoreCase("all");
 		/// Try to get the item first from the command line
 		ItemStack is = length > 1 ? InventoryUtil.getItemStack(args[1]) : null;
-		if (is == null && !all){ /// now try getting is from the player
-			is = p.getItemInHand();}
+		if (is == null && !all && p instanceof Player){ /// now try getting is from the player
+			
+			is = ((Player)p).getItemInHand();}
 		if (!all && (is==null || is.getTypeId()==0)){
 			return sendMessage(p,"&eYou can't enchant nothing");}
 		
@@ -241,7 +254,7 @@ public class EnchantExecutor  {
 		return ewl;
 	}
 
-	public static boolean sendMessage(Player p, String msg){
+	public static boolean sendMessage(CommandSender p, String msg){
 		if (msg == null)
 			return false;
 		if (p == null){

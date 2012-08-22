@@ -1,0 +1,13 @@
+name: BattleEnchant
+
+main: com.alk.battleEnchant.BattleEnchant
+
+version: 1.2
+
+author: Alkarin
+description: "Enchant Items"
+softdepend: [Permissions]
+commands:
+    enc:
+        aliases: [e,enchant]
+        description: Enchant an item
