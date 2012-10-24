@@ -21,12 +21,12 @@ import com.alk.battleEnchant.Util;
 import com.alk.battleEnchant.util.InventoryUtil;
 
 /**
- * 
+ *
  * @author alkarin
  *
  */
 public class EnchantExecutor implements CommandExecutor {
-	
+
 	public boolean onCommand(CommandSender sender, Command cmd, String commandLabel, String[] args) {
 		final String commandStr = cmd.getName().toLowerCase();
 		int length = args.length;
@@ -36,7 +36,7 @@ public class EnchantExecutor implements CommandExecutor {
 				return enchantList(sender,args);
 			}
 			return enchantItem(sender,args);
-		}	
+		}
 		return true;
 	}
 
@@ -50,9 +50,9 @@ public class EnchantExecutor implements CommandExecutor {
 			}
 			return enchantItem(p,args);
 		}
-		
+
 		return true;
-	}	
+	}
 
 
 	private boolean enchantItem(CommandSender cs, String[] args) {
@@ -94,7 +94,7 @@ public class EnchantExecutor implements CommandExecutor {
 			return sendMessage(cs,"&e/e list: &fshow which enchantments can be put on the item you're holding");
 		}
 		if (args.length < 2){
-			return sendMessage(cs,"&e/e <player> <itemid> <enchantment1>[:level] <enchantment2>[:level] ... ");			
+			return sendMessage(cs,"&e/e <player> <itemid> <enchantment1>[:level] <enchantment2>[:level] ... ");
 		}
 		is = InventoryUtil.getItemStack(args[1]);
 		if (is == null){
@@ -119,17 +119,17 @@ public class EnchantExecutor implements CommandExecutor {
 		/// Try to get the item first from the command line
 		ItemStack is = length > 1 ? InventoryUtil.getItemStack(args[1]) : null;
 		if (is == null && !all && p instanceof Player){ /// now try getting is from the player
-			
+
 			is = ((Player)p).getItemInHand();}
 		if (!all && (is==null || is.getTypeId()==0)){
 			return sendMessage(p,"&eYou can't enchant nothing");}
-		
+
 		if (!all){
-			sendMessage(p,"&eValid Enchantments for " +Material.getMaterial(is.getTypeId()).toString() +":\n");			
+			sendMessage(p,"&eValid Enchantments for " +Material.getMaterial(is.getTypeId()).toString() +":\n");
 		} else {
-			sendMessage(p,"&eAll Enchantments:\n");			
+			sendMessage(p,"&eAll Enchantments:\n");
 		}
-		HashMap<Integer,Enchantment> ordered = new HashMap<Integer,Enchantment>(); 
+		HashMap<Integer,Enchantment> ordered = new HashMap<Integer,Enchantment>();
 		for (Enchantment enc : Enchantment.values()){
 			ordered.put(enc.getId(), enc);
 		}
@@ -141,7 +141,7 @@ public class EnchantExecutor implements CommandExecutor {
 		for (Integer eid : ints){
 			Enchantment enc = Enchantment.getById(eid);
 			if (all || enc.canEnchantItem(is))
-				sendMessage(p,"&6"+enc.getName()+"&e(&6" + enc.getId()+"&e)[&8" + enc.getStartLevel()+"&e-&8" + enc.getMaxLevel()+"&e]");
+				sendMessage(p,"&6"+InventoryUtil.getCommonNameByEnchantment(enc)+"&e(&6" + enc.getId()+"&e)[&8" + enc.getStartLevel()+"&e-&8" + enc.getMaxLevel()+"&e]");
 		}
 
 
@@ -151,14 +151,14 @@ public class EnchantExecutor implements CommandExecutor {
 	@SuppressWarnings("deprecation")
 	private ItemStack giveEnchantedItem(Player p, ItemStack is, String[] args) {
 		ItemStack item = is.clone();
-		if (item.getAmount() == 0) 
+		if (item.getAmount() == 0)
 			item.setAmount(1);
 		addEnchantments(item,args);
 		p.getInventory().addItem(item);
 		p.updateInventory();
 		return item;
 	}
-	
+
 	private String getEnchantmentNames(ItemStack is) {
 		if (is == null){
 			return "none";}
@@ -167,7 +167,7 @@ public class EnchantExecutor implements CommandExecutor {
 		boolean first = true;
 		for (Enchantment enc : enchantments.keySet()){
 			if (!first) sb.append(", ");
-			sb.append(enc.getName()+":" + enchantments.get(enc));
+			sb.append(InventoryUtil.getCommonNameByEnchantment(enc)+":" + enchantments.get(enc));
 			first = false;
 		}
 		return sb.toString();
@@ -184,7 +184,7 @@ public class EnchantExecutor implements CommandExecutor {
 		return sendMessage(p,"&eAdded enchantments: " +  getEnchantmentNames(is));
 	}
 
-	
+
 	private void addEnchantments(ItemStack is,Map<Enchantment, Integer> enchantments) {
 		for (Enchantment e: enchantments.keySet()){
 			if (e.canEnchantItem(is)){
@@ -201,7 +201,7 @@ public class EnchantExecutor implements CommandExecutor {
 			if (ewl != null){
 				if (ewl.all){
 					return InventoryUtil.addAllEnchantments(is);
-				}					
+				}
 				encs.put(ewl.e, ewl.lvl);
 			}
 		}
@@ -217,7 +217,7 @@ public class EnchantExecutor implements CommandExecutor {
 		}
 		return rargs;
 	}
-	
+
 	public class EnchantmentWithLevel{
 		public EnchantmentWithLevel(){}
 		public EnchantmentWithLevel(boolean all){this.all = all;}
@@ -225,7 +225,7 @@ public class EnchantExecutor implements CommandExecutor {
 		public Integer lvl;
 		boolean all = false;
 	}
-	
+
 	private EnchantmentWithLevel getEnchantment(String str) {
 		if (str.equalsIgnoreCase("all")){
 			return new EnchantmentWithLevel(true);
@@ -238,7 +238,7 @@ public class EnchantExecutor implements CommandExecutor {
         if (index != -1){
         	try {lvl = Integer.parseInt(str.substring(index + 1)); } catch (Exception err){}
             str = str.substring(0,index);
-        } 
+        }
 		try {e = Enchantment.getById(Integer.valueOf(str));} catch (Exception err){}
 		if (e == null)
 			e = Enchantment.getByName(str);
@@ -249,7 +249,7 @@ public class EnchantExecutor implements CommandExecutor {
 		EnchantmentWithLevel ewl = new EnchantmentWithLevel();
 		ewl.e = e;
 		if (lvl < e.getStartLevel()){lvl = e.getStartLevel();}
-		if (lvl > e.getMaxLevel()){lvl = e.getMaxLevel();}
+//		if (lvl > e.getMaxLevel()){lvl = e.getMaxLevel();}
 		ewl.lvl = lvl;
 		return ewl;
 	}
@@ -268,7 +268,7 @@ public class EnchantExecutor implements CommandExecutor {
 	private Player findPlayer(String name) {
 		Server server =Bukkit.getServer();
 		Player lastPlayer = server.getPlayer(name);
-		if (lastPlayer != null) 
+		if (lastPlayer != null)
 			return lastPlayer;
 
         Player[] online = server.getOnlinePlayers();
