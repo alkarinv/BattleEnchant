@@ -20,7 +20,7 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
 
 public class InventoryUtil {
-	static final String version = "InventoryUtil 2.1.3.3";
+	static final String version = "InventoryUtil 2.1.3.5";
 	static final boolean DEBUG = false;
 
 	public static class Armor{
@@ -63,6 +63,10 @@ public class InventoryUtil {
 		if (iname.contains("loot")) return Enchantment.LOOT_BONUS_MOBS;
 		if (iname.contains("dig")) return Enchantment.DIG_SPEED;
 		if (iname.contains("eff")) return Enchantment.DIG_SPEED;
+		if (iname.contains("flame")) return Enchantment.ARROW_FIRE;
+		if (iname.contains("power")) return Enchantment.ARROW_DAMAGE;
+		if (iname.contains("punch")) return Enchantment.ARROW_KNOCKBACK;
+		if (iname.contains("inf")) return Enchantment.ARROW_INFINITE;
 		if (iname.contains("silk")) return Enchantment.SILK_TOUCH;
 		if (iname.contains("unbreaking")) return Enchantment.DURABILITY;
 		if (iname.contains("dura")) return Enchantment.DURABILITY;
